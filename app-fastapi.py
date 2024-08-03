@@ -5,6 +5,7 @@ import collections, secrets, json, pathlib, os, base64, hashlib
 #import requests
 from fastapi import FastAPI, Header, Form, Response, HTTPException, Depends
 from fastapi.responses import PlainTextResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 
 import helpers
@@ -24,8 +25,6 @@ class StaticFilesCustom(helpers.StaticFilesWithDir):
             'stagefright'      in user_agent
         )
         
-        print(scope['path'], likely_vrc_client)
-        
         if scope['path'].startswith('/static/restricted/') \
         and not likely_vrc_client:
             raise HTTPException(status_code=403)
@@ -37,6 +36,11 @@ app.mount(
     name='static',
     path='/static',
     app=StaticFilesCustom(directory='/www', html=True),
+)
+app.mount(
+    name='acme',
+    path='/.well-known/acme-challenge',
+    app=StaticFiles(directory='/www/.well-known/acme-challenge', html=True),
 )
 
 #@app.get('/', response_class=HTMLResponse)
