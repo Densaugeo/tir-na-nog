@@ -13,8 +13,6 @@ dev:
 		--ssl-certfile fullchain.pem
 
 install:
-	# Sudo is needed for creating /www folder and getting port 80
-	# permissions
 	sudo mkdir -p /www
 	sudo chown 1000 /www
 	sudo chmod 755 /www
@@ -28,9 +26,12 @@ install:
 	sudo setcap CAP_NET_BIND_SERVICE=+eip \
 		$$(readlink -f venv-$(PY)/bin/python)
 	
-	@printf '\n\033[38;2;255;224;0m'
-	# !!!! Run make certify as well (don't know how long until expiry) !!!!
-	@printf '\033[0m\n'
+	sudo cp -f tir-na-nog.service /etc/systemd/system
+	sudo systemctl daemon-reload
+	
+	@printf '\n\033[38;2;255;224;0m!!!! '
+	@printf 'Run make certify as well (don$'t know how long until expiry)'
+	@printf ' !!!!\033[0m\n\n'
 
 certify:
 	sudo certbot certonly --email 'nathan.yinger@gmail.com' --agree-tos \

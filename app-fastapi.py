@@ -7,8 +7,12 @@ from fastapi import FastAPI, Header, Form, Response, HTTPException, Depends
 from fastapi.responses import PlainTextResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
+from setproctitle import setproctitle
 
 import helpers
+
+
+setproctitle('tir-na-nog')
 
 
 class StaticFilesCustom(helpers.StaticFilesWithDir):

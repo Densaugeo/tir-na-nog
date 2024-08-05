@@ -1,1 +1,2 @@
 fastapi[standard]==0.112.0
+setproctitle==1.3.3

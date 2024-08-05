@@ -1,0 +1,15 @@
+[Unit]
+Description=tir-na-nog
+After=network.target
+
+[Service]
+User=den-antares
+WorkingDirectory=/home/den-antares/projects/tir-na-nog
+# LimitNOFILE copied from guide, not sure if important
+LimitNOFILE=4096
+ExecStart=make run
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
