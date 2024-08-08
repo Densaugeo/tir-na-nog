@@ -69,9 +69,17 @@ async def get_echo(number: int, string: Annotated[str, Query(max_length=4)]):
 
 from fastapi.security import OAuth2PasswordBearer
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+def validate_token(token: str):
+    if token != 'some-token':
+        raise HTTPException(401, 'Invalid token')
+    
+    return token
 
 @app.get('/restricted')
-async def get_restricted(token: Annotated[str, Depends(oauth2_scheme)]):
+async def get_restricted(token: Annotated[str, Depends(validate_token)]):
     print(f'Got token: {token}')
     return 'hi'
+
+@app.post('/login')
+async def post_login():
+    return PlainTextResponse('some-token')
