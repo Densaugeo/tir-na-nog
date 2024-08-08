@@ -6,11 +6,11 @@ run:
 		--ssl-keyfile privkey.pem \
 		--ssl-certfile fullchain.pem
 
-dev:
+dev: test.pem
 	venv-$(PY)/bin/python -m uvicorn app-fastapi:app \
-		--host 0.0.0.0 --port 443 --reload \
-		--ssl-keyfile privkey.pem \
-		--ssl-certfile fullchain.pem
+		--host 0.0.0.0 --port 8443 --reload \
+		--ssl-keyfile test.pem \
+		--ssl-certfile test.pem
 
 install:
 	sudo mkdir -p /www
@@ -46,3 +46,7 @@ certify:
 	sudo chown 1000 *.pem
 	sudo chgrp 1000 *.pem
 	sudo chmod 755 *.pem
+
+test.pem:
+	openssl req -x509 -out test.pem -keyout test.pem -newkey rsa:2048 \
+		-nodes -sha256 -subj '/CN=test' -days 10000
