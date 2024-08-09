@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+
+<title>Tir na Nog - Login</title>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+let prelogin = await fetch('/prelogin', { method: 'POST' })
+if(prelogin.status !== 200) {
+  alert(`AAAA a prelogin error: ${prelogin.status} - ${await prelogin.text()}`)
+}
+prelogin = await prelogin.json()
+
+window.buffer_to_b64 = buffer => {
+  return btoa(String.fromCharCode.apply(null, new Uint8Array(buffer)))
+  // Possible alternate from new example:
+  // const asBase64 = ab => btoa(String.fromCharCode(...new Uint8Array(ab)))
+}
+
+window.b64_to_u8_array = b64 => {
+  return Uint8Array.from(atob(b64), c => c.charCodeAt(0))
+}
+
+//const b64 = btoa(String.fromCharCode.apply(null, prelogin.allowCredentials[0]))
+const b64 = prelogin.allowCredentials[0]
+console.log(b64)
+const recoverted_buffer = b64_to_u8_array(b64)
+console.log(prelogin.allowCredentials[0])
+console.log(recoverted_buffer)
+//for(let i = 0; i < prelogin.allowCredentials[0].length; ++i) {
+//  if(prelogin.allowCredentials[0][i] !== recoverted_buffer[i]) {
+//    console.log(`Byte ${i} differs`)
+//  }
+//}
+
+const yubikey_response = await navigator.credentials.get({
+  publicKey: {
+    challenge: new Uint8Array(prelogin.challenge),
+    rp: { id: "localhost", name: "Localhost" },
+    allowCredentials: [{
+      type: "public-key",
+      // id field here is equal to credential.rawId. Do not use credential.id -
+      // it is supposed to be a base64 representation of .rawId, but atob()
+      // and btoa() cannot convert it correctly (they error or gives results
+      // of the wrong length)
+      //id: new Uint8Array(prelogin.allowCredentials[0]),
+      id: b64_to_u8_array(prelogin.allowCredentials[0]),
+      //id: new TextEncoder().encode(credential.id),
+    }],
+  }
+})
+console.log(yubikey_response)
+
+
+let login = await fetch('/login', { method: 'POST', body: JSON.stringify({
+  authenticatorData: buffer_to_b64(yubikey_response.response.authenticatorData),
+  clientDataJSON: buffer_to_b64(yubikey_response.response.clientDataJSON),
+  signature: buffer_to_b64(yubikey_response.response.signature),
+  json_dump: yubikey_response,
+  create_string: '{"id":"iJdDqCOfx8Fkh-6PJHsw2sI98RevmuQ2UXiMe2gUgEQHTIVYpIUxvWoX6izv6M2IHXFp5IVXj6PSXAB-ephfog","rawId":"iJdDqCOfx8Fkh+6PJHsw2sI98RevmuQ2UXiMe2gUgEQHTIVYpIUxvWoX6izv6M2IHXFp5IVXj6PSXAB+ephfog==","response":{"attestationObject":"o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVjESZYN5YgOjGh0NBcPZHZgW4/krrmihjLHmVzzuoMdl2NBAAAAAQAAAAAAAAAAAAAAAAAAAAAAQIiXQ6gjn8fBZIfujyR7MNrCPfEXr5rkNlF4jHtoFIBEB0yFWKSFMb1qF+os7+jNiB1xaeSFV4+j0lwAfnqYX6KlAQIDJiABIVggr0Lj09zPLIkWkmDtRkUmsKF+1ZChy9UihZpC1fo7Dq0iWCAn7CptZLAPKfbC4Wzo1Pib3vbhyuTRH5VZXkWAjXYT2A==","clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiZFQzODU3X3hCd2gxUGZ6bnZfRUhDQSIsIm9yaWdpbiI6Imh0dHBzOi8vbG9jYWxob3N0Ojg0NDMiLCJjcm9zc09yaWdpbiI6ZmFsc2V9"},"type":"public-key"}'
+  /*json_dump: {
+    authenticatorAttachment: yubikey_response.authenticatorAttachment,
+    clientExtensionResults: yubikey_response.clientExtensionResults,
+    id: yubikey_response.id,
+    rawId: buffer_to_b64(yubikey_response.rawId),
+    response: {
+      authenticatorData: buffer_to_b64(yubikey_response.response.authenticatorData),
+      clientDataJSON: buffer_to_b64(yubikey_response.response.clientDataJSON),
+      signature: buffer_to_b64(yubikey_response.response.signature),
+      attestationObject: "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVjESZYN5YgOjGh0NBcPZHZgW4/krrmihjLHmVzzuoMdl2NBAAAAAQAAAAAAAAAAAAAAAAAAAAAAQIiXQ6gjn8fBZIfujyR7MNrCPfEXr5rkNlF4jHtoFIBEB0yFWKSFMb1qF+os7+jNiB1xaeSFV4+j0lwAfnqYX6KlAQIDJiABIVggr0Lj09zPLIkWkmDtRkUmsKF+1ZChy9UihZpC1fo7Dq0iWCAn7CptZLAPKfbC4Wzo1Pib3vbhyuTRH5VZXkWAjXYT2A==",
+    },
+    type: yubikey_response.type,
+  },*/
+}) })
+if(login.status !== 200) {
+  alert(`AAAA a login error: ${login.status} - ${await login.text()}`)
+}
+login = await login.text()
+console.log(login)
+</script>
+</html>
