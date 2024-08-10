@@ -48,5 +48,5 @@ certify:
 	sudo chmod 755 *.pem
 
 test.pem:
-	openssl req -x509 -out test.pem -keyout test.pem -newkey rsa:2048 \
+	openssl req -x509 -out test.pem -keyout test.pem -newkey rsa:3072 \
 		-nodes -sha256 -subj '/CN=test' -days 10000
