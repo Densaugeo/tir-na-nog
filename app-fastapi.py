@@ -215,6 +215,11 @@ async def get_files_test():
 
 # Keep .mount() calls at end, so that endpoints inside /files are still served
 app.mount(
+    name='static',
+    path='/static',
+    app=StaticFilesCustom(directory=pathlib.Path(__file__).parent / 'static'),
+)
+app.mount(
     name='files',
     path='/files',
     app=StaticFilesCustom(directory='/www', html=True),
