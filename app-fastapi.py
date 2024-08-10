@@ -100,11 +100,7 @@ challenge = None
 
 tokens = []
 
-@app.get('/login.html')
-async def get_login_html():
-    return FileResponse('login.html')
-
-@app.post('/prelogin')
+@app.post('/api/challenge')
 async def post_prelogin():
     global challenge
     # MDN states the challenge should be at least 16 bytes
@@ -115,8 +111,8 @@ async def post_prelogin():
         'allowCredentials': [v.id for v in registered_keys],
     })
 
-@app.post('/register-key')
-async def post_register_key(request: Request):
+@app.post('/api/register-key')
+async def post_api_register_key(request: Request):
     global challenge
     if challenge is None:
         raise HTTPException(403, 'Forbidden - Challenge not set')
@@ -153,8 +149,8 @@ async def post_register_key(request: Request):
             'ascii'),
     })
 
-@app.post('/login')
-async def post_login(request: Request):
+@app.post('/api/login')
+async def post_api_login(request: Request):
     global challenge
     if challenge is None:
         raise HTTPException(403, 'Forbidden - Challenge not set')
@@ -191,8 +187,8 @@ async def post_login(request: Request):
     res.set_cookie(key='token', value=token)
     return res
 
-@app.post('/logout')
-async def post_logout(token: str | None = Cookie(default=None)):
+@app.post('/api/logout')
+async def post_api_logout(token: str | None = Cookie(default=None)):
     if token not in tokens:
         raise HTTPException(401, 'Unauthorized - login at https:/login.html')
     
@@ -200,8 +196,8 @@ async def post_logout(token: str | None = Cookie(default=None)):
     
     return PlainTextResponse('Success!')
 
-@app.post('/logout-all')
-async def post_logout(token: str | None = Cookie(default=None)):
+@app.post('/api/logout-all')
+async def post_api_logout(token: str | None = Cookie(default=None)):
     if token not in tokens:
         raise HTTPException(401, 'Unauthorized - login at https:/login.html')
     

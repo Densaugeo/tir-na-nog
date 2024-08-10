@@ -47,7 +47,7 @@ window.fetch_json = async (url, options) => {
 ////////////////////
 
 const register_key = async () => {
-  const challenge = await fetch_json('/prelogin', { method: 'POST' })
+  const challenge = await fetch_json('/api/challenge', { method: 'POST' })
   
   const credential = await navigator.credentials.create({
     publicKey: {
@@ -68,7 +68,7 @@ const register_key = async () => {
     },
   })
   
-  const registration = await fetch_json('/register-key', {
+  const registration = await fetch_json('/api/register-key', {
     method: 'POST',
     body: JSON.stringify({
       id: credential.id,
@@ -98,7 +98,7 @@ const register_key = async () => {
 }
 
 const login = async () => {
-  const challenge = await fetch_json('/prelogin', { method: 'POST' })
+  const challenge = await fetch_json('/api/challenge', { method: 'POST' })
   
   const credential = await navigator.credentials.get({
     publicKey: {
@@ -114,7 +114,7 @@ const login = async () => {
     }
   })
   
-  await fetch_text('/login', {
+  await fetch_text('/api/login', {
     method: 'POST',
     // pywebauthn is designed to use a stringified PublicKeyCredential object.
     // This works fine when the client runs in Firefox, but in Chrome running
@@ -135,14 +135,14 @@ const login = async () => {
 }
 
 const logout = async () => {
-  const res = await fetch('/logout', { method: 'POST' })
+  const res = await fetch('/api/logout', { method: 'POST' })
   if(res.status !== 200) {
     alert(`AAAA a logout error: ${res.status} - ${await res.text()}`)
   }
 }
 
 const logout_all = async () => {
-  const res = await fetch('/logout-all', { method: 'POST' })
+  const res = await fetch('/api/logout-all', { method: 'POST' })
   if(res.status !== 200) {
     alert(`AAAA a logout error: ${res.status} - ${await res.text()}`)
   }
@@ -157,8 +157,6 @@ login()
 
 /*
 TODO
-Naming convention for endpoints - /api prefix? separate /static and /www?
-Rename prelogin to challenge
 Test on real domain
 Test on mobile
 Try out other passkeys?
