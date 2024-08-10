@@ -135,17 +135,11 @@ const login = async () => {
 }
 
 const logout = async () => {
-  const res = await fetch('/api/logout', { method: 'POST' })
-  if(res.status !== 200) {
-    alert(`AAAA a logout error: ${res.status} - ${await res.text()}`)
-  }
+  await fetch_text('/api/logout', { method: 'POST' })
 }
 
 const logout_all = async () => {
-  const res = await fetch('/api/logout-all', { method: 'POST' })
-  if(res.status !== 200) {
-    alert(`AAAA a logout error: ${res.status} - ${await res.text()}`)
-  }
+  await fetch_text('/api/logout-all', { method: 'POST' })
 }
 
 document.getElementById('register-key').addEventListener('click', register_key)
