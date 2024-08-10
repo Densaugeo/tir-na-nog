@@ -14,6 +14,7 @@ credential = await navigator.credentials.create({
       displayName: "Den Antares"
     },
     pubKeyCredParams: [
+      // Chrome logs a warning unless both of these algorithms are specified
       { type: "public-key", alg: -7 },
       { type: "public-key", alg: -257 },
     ],
