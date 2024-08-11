@@ -123,12 +123,14 @@ async def post_api_register_key(request: Request):
     print(body)
     print()
     
+    assert body['rpId'] in ['localhost', 'den-antares.com']
+    
     print('Attempting verify_registration_response()')
     verified_registration = verify_registration_response(
         credential=body,
         expected_challenge=challenge_local,
-        expected_rp_id='localhost',
-        expected_origin='https://localhost:8443',
+        expected_rp_id=body['rpId'],
+        expected_origin=body['origin'],
         require_user_verification=False,
     )
     print(verified_registration)
@@ -177,6 +179,7 @@ async def post_api_login(request: Request):
         credential_current_sign_count=0,
         require_user_verification=False,
     )
+    
     print('Finally got a verified response:')
     print(verified_response)
     print()
