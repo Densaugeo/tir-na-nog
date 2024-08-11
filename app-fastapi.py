@@ -94,6 +94,18 @@ registered_keys = [
         public_key='pQECAyYgASFYIOZIpVC7JbRnKeFSvqeiP8WtymmjyFsCwY8A3tmbkzgEIlg'
             'gNOhEmwyz7HwSpK84kyvf5BBoNKj42KZuT6BAugPPiug=',
     ),
+    RegisteredKey( # den-antares.com - Yubikey 5 NFC (Ars)
+        id='6Vbj8ydd2++owAKKJht0DVg/cTMoeitoIWb6jyJU2843y5fdfoQB0BrHbXhF2leaE1w'
+            'p2TSZPRm0ouCsU0ZAQg==',
+        public_key='pQECAyYgASFYIPQBXXqMi4KLyf9YSe6BXRzA5k6NPkw2xnzfzl/MdMelIlg'
+            'gqHADqPonr9wPimc6vpb+maZBdift9nDYcLfHqaverL8=',
+    ),
+    RegisteredKey( # den-antares.com - Yubikey 5 Nano
+        id='tjoXP+WRKwOR4EUG6t2txazV9z5oXshuLPArHc4z17bSjnRG8TtWCskqSBHTqKOpTOA'
+            'ZTZJAJ3H9JO72zpzplA==',
+        public_key='pQECAyYgASFYIOMM69cfD8rb7q0SCTp85hYWU3rJBw5FFTdjUteBM9T1Ilg'
+            'gXeOV2n0MEIovV/clxEwpVH5xkqPmiDW+aJRkINeR06s=',
+    ),
 ]
 
 challenge = None

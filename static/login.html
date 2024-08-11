@@ -56,6 +56,7 @@ const register_key = async () => {
     publicKey: {
       challenge: b64_to_u8_array(challenge.challenge),
       rp: { id: domain, name: domain },
+      rpId: domain,
       // The values in the 'user' field are never used later, they don't matter
       // but will throw an error if left empty
       user: {
@@ -115,10 +116,11 @@ const login = async () => {
   const credential = await navigator.credentials.get({
     publicKey: {
       challenge: b64_to_u8_array(challenge.challenge),
-      // This is the new way. Many examples online use an rpId field instead,
-      // but that throws an error in current browsers. How long until they
+      // rp is the new way, rpId is the old way. Both must be supplied for auth
+      // to work in current browsers (as of 11 Aug 2024). How long until they
       // change it again?
       rp: { id: domain, name: domain },
+      rpId: domain,
       allowCredentials: challenge.allowCredentials.map(v => { return {
         type: 'public-key',
         id: b64_to_u8_array(v),
