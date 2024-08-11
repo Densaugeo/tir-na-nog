@@ -163,6 +163,8 @@ async def post_api_login(request: Request):
     print(body)
     print()
     
+    assert body['rpId'] in ['localhost', 'den-antares.com']
+    
     for key in registered_keys:
         if key.id == body['rawId']:
             public_key = base64.b64decode(key.public_key)
@@ -173,8 +175,8 @@ async def post_api_login(request: Request):
     verified_response = verify_authentication_response(
         credential=body,
         expected_challenge=challenge_local,
-        expected_rp_id='localhost',
-        expected_origin='https://localhost:8443',
+        expected_rp_id=body['rpId'],
+        expected_origin=body['origin'],
         credential_public_key=public_key,
         credential_current_sign_count=0,
         require_user_verification=False,

@@ -109,13 +109,16 @@ const register_key = async () => {
 const login = async () => {
   const challenge = await fetch_json('/api/challenge', { method: 'POST' })
   
+  const domain = location.hostname === 'localhost' ? 'localhost' :
+    'den-antares.com'
+  
   const credential = await navigator.credentials.get({
     publicKey: {
       challenge: b64_to_u8_array(challenge.challenge),
       // This is the new way. Many examples online use an rpId field instead,
       // but that throws an error in current browsers. How long until they
       // change it again?
-      rp: { id: 'localhost', name: 'Localhost' },
+      rp: { id: domain, name: domain },
       allowCredentials: challenge.allowCredentials.map(v => { return {
         type: 'public-key',
         id: b64_to_u8_array(v),
@@ -139,6 +142,12 @@ const login = async () => {
         signature: buffer_to_b64(credential.response.signature),
       },
       type: credential.type,
+      
+      // rpId and origin aren't part of the credential, but are needed because
+      // pywebauthn checks them. They can't be hardcoded because they'll differ
+      // between test and production, or even between different production hosts
+      rpId: domain,
+      origin: location.origin,
     }),
   })
 }
