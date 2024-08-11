@@ -82,13 +82,13 @@ class RegisteredKey:
     public_key: str
 
 registered_keys = [
-    RegisteredKey( # Yubikey 5 NFC (Ars)
+    RegisteredKey( # localhost - Yubikey 5 NFC (Ars)
         id='am0MIQbgeDpimmSs5vTvfv30An1ELKiWtUEDDe9wXLdwiWElfTXd6cC3iiZVIsbQPwC'
             'pD7PzsOUyBx7TKfmBnQ==',
         public_key='pQECAyYgASFYIENWdY0TOVzPWHdbDzejUQ402qe4st8lCGPsLTSnECqfIlg'
             'g+cOG2IEQPQW51Zh4VgyFtTZGeW9yKEnzJKeZRAwX60Q=',
     ),
-    RegisteredKey( # Yubikey 5 Nano
+    RegisteredKey( # localhost - Yubikey 5 Nano
         id='WqHqs+1RUtuDpummLrFxnmQjRop/4x7JyTeaDwbF1HGDw96bbxDuoVZismqiKK2ylZS'
             'fEkiAn0ZNACQK3/zj3Q==',
         public_key='pQECAyYgASFYIOZIpVC7JbRnKeFSvqeiP8WtymmjyFsCwY8A3tmbkzgEIlg'

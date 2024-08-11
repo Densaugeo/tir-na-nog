@@ -49,10 +49,13 @@ window.fetch_json = async (url, options) => {
 const register_key = async () => {
   const challenge = await fetch_json('/api/challenge', { method: 'POST' })
   
+  const domain = location.hostname === 'localhost' ? 'localhost' :
+    'den-antares.com'
+  
   const credential = await navigator.credentials.create({
     publicKey: {
       challenge: b64_to_u8_array(challenge.challenge),
-      rp: { id: 'localhost', name: 'Localhost' },
+      rp: { id: domain, name: domain },
       // The values in the 'user' field are never used later, they don't matter
       // but will throw an error if left empty
       user: {
@@ -82,7 +85,7 @@ const register_key = async () => {
   })
   
   const snippet =
-`    RegisteredKey(
+`    RegisteredKey( # ${domain}
         id='${registration.id}',
         public_key='${registration.public_key}',
     ),
