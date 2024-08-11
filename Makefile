@@ -34,15 +34,17 @@ install:
 	@printf ' !!!!\033[0m\n\n'
 
 certify:
+	read -p 'Make sure plain HTTP server is running in /www and press enter...' -n1 -s
+	
 	sudo certbot certonly --email 'nathan.yinger@gmail.com' --agree-tos \
 	--non-interactive -d 'tir-na-nog.den-antares.com' --webroot -w /www
 	
 	@printf '\n\033[38;2;255;224;0m'
-	# !!!! Verify certificate and key are in the same place !!!!
+	# !!!! Verify certificate and key haven't moved !!!!
 	@printf '\033[0m\n'
 	
-	sudo cp /etc/letsencrypt/live/tir-na-nog.den-antares.com/privkey.pem privkey.pem
-	sudo cp /etc/letsencrypt/live/tir-na-nog.den-antares.com/fullchain.pem fullchain.pem
+	sudo cp /etc/letsencrypt/live/tir-na-nog.den-antares.com/privkey.pem .
+	sudo cp /etc/letsencrypt/live/tir-na-nog.den-antares.com/fullchain.pem .
 	sudo chown 1000 *.pem
 	sudo chgrp 1000 *.pem
 	sudo chmod 755 *.pem

@@ -220,8 +220,3 @@ app.mount(
     path='/files',
     app=StaticFilesCustom(directory='/www', html=True),
 )
-app.mount(
-    name='acme',
-    path='/.well-known/acme-challenge',
-    app=StaticFiles(directory='/www/.well-known/acme-challenge', html=True),
-)
