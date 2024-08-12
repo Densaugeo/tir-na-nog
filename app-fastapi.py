@@ -15,38 +15,6 @@ import helpers
 
 setproctitle('tir-na-nog')
 
-
-class StaticFilesCustom(helpers.StaticFilesWithDir):
-    async def __call__(self, scope: Scope, receive: Receive, send: Send
-    ) -> None:
-        for key, value in scope['headers']:
-            if key == b'user-agent':
-                user_agent = str(value, 'utf8')
-        
-        likely_vrc_client = bool(user_agent) and (
-            'NSPlayer'         in user_agent or
-            'GStreamer'        in user_agent or
-            'AVProMobileVideo' in user_agent or
-            'stagefright'      in user_agent
-        )
-        
-        if scope['path'].startswith('/files/restricted/') \
-        and not likely_vrc_client:
-            token = None
-            print(scope['headers'])
-            for key, value in scope['headers']:
-                if key == b'cookie':
-                    match = re.match('token="(.*)"', str(value, 'ascii'))
-                    if match:
-                        token = match.group(1)
-            
-            print(token)
-            if token not in tokens:
-                raise HTTPException(401, 'Unauthorized - login at '
-                    'https:/login.html')
-        
-        await super().__call__(scope, receive, send)
-
 app = FastAPI()
 
 #@app.get('/', response_class=HTMLResponse)
@@ -222,18 +190,30 @@ async def post_api_logout(token: str | None = Cookie(default=None)):
     
     return PlainTextResponse('Success!')
 
-@app.get('/files/test')
-async def get_files_test():
-    return PlainTextResponse('hello from files path')
+@app.get('/files/')
+@app.get('/files/{file_path:path}/')
+async def get_files(request: Request, file_path: str | None = None,
+token: str | None = Cookie(default=None)):
+    machine_path = (pathlib.Path('/www') / (file_path or '')).resolve()
+    
+    if os.path.commonpath([machine_path, '/www/restricted']) == \
+    '/www/restricted':
+        if token not in tokens:
+            raise HTTPException(401, 'Unauthorized - login at '
+                'https:/static/login.html')
+    
+    return helpers.StaticFilesWithDir.get_dir_list(None, machine_path, {
+        'path': request.url.path,
+    })
 
 # Keep .mount() calls at end, so that endpoints inside /files are still served
 app.mount(
     name='static',
     path='/static',
-    app=StaticFilesCustom(directory=pathlib.Path(__file__).parent / 'static'),
+    app=StaticFiles(directory=pathlib.Path(__file__).parent / 'static'),
 )
 app.mount(
     name='files',
     path='/files',
-    app=StaticFilesCustom(directory='/www', html=True),
+    app=helpers.StaticFilesWithDir(directory='/www', html=True),
 )
