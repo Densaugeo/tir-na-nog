@@ -1,3 +1,21 @@
+Points to hit in blog post:
+- pywebauthn vs python-webauthn
+- Resident vs. non-resident keys
+  * Resident isn't ready yet due to Yubikey # limit and PIN usability issues
+  * Resident does offer better security against physical key theft
+- JSON serialization doesn't work in Chrome
+  * https://github.com/duo-labs/py_webauthn/issues/208
+- Changes like rpId vs rp object
+- No working examples
+  * https://gist.github.com/samuelcolvin/3ff019aa738aa558a185c4fb002b5751
+- State of bug-fixing
+  * https://stackoverflow.com/questions/62717941/why-navigator-credentials-get-function-not-working-in-firefox-addon
+  * https://bugzilla.mozilla.org/show_bug.cgi?id=1479500
+- How to test?
+  * https://www.reddit.com/r/webdev/comments/1epstuv/is_it_possible_to_set_up_a_test_server_for_a/
+- Recommendation: useful for low-mid security to not store passwords, should not
+  use for high security due to quality issues + lack of testing and fixes
+
 Create a non-resident key:
 
 ```
