@@ -1,48 +1,26 @@
-# Installed fastapi, fastapi[standard]
+import collections, secrets, json, pathlib, os, base64, dataclasses
+import setproctitle
 
-import collections, secrets, json, pathlib, os, base64, hashlib, re
-
-#import requests
-from fastapi import FastAPI, Header, Form, Response, HTTPException, Depends, Request, Cookie
-from fastapi.responses import PlainTextResponse, HTMLResponse, FileResponse, JSONResponse
-import fastapi.responses
+from fastapi import FastAPI, HTTPException, Request, Cookie
+import fastapi.responses as fr
 from fastapi.staticfiles import StaticFiles
-from starlette.types import Receive, Scope, Send
-from setproctitle import setproctitle
+import webauthn
 
 import helpers
 
+#################
+# General Setup #
+#################
 
-setproctitle('tir-na-nog')
+setproctitle.setproctitle('tir-na-nog')
+
+__dir__ = pathlib.Path(__file__).parent
 
 app = FastAPI()
 
-#@app.get('/', response_class=HTMLResponse)
-#def get_():
-#    with open('index.html') as f:
-#        return f.read()
+challenge = None
 
-@app.get('/foo')
-async def get_foo(response: Response):
-    #response.status_code = 409
-    #return 'A 409 error occurred'
-    return { 'foo': 'bar' }
-    #return send_file('index.html')
-
-from typing import Annotated
-from fastapi import Query
-
-@app.get('/echo')
-async def get_echo(number: int, string: Annotated[str, Query(max_length=4)]):
-    return number
-
-
-from fastapi.security import OAuth2PasswordBearer
-import json
-from webauthn import verify_authentication_response, verify_registration_response
-import base64
-import dataclasses
-
+tokens = []
 
 @dataclasses.dataclass
 class RegisteredKey:
@@ -76,9 +54,14 @@ registered_keys = [
     ),
 ]
 
-challenge = None
+#############
+# Endpoints #
+#############
 
-tokens = []
+@app.get('/')
+async def get_():
+    with open(__dir__ / 'static' / 'index.html') as f:
+        return fr.HTMLResponse(f.read())
 
 @app.post('/api/challenge')
 async def post_prelogin():
@@ -86,7 +69,7 @@ async def post_prelogin():
     # MDN states the challenge should be at least 16 bytes
     # https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API
     challenge = os.urandom(16)
-    return JSONResponse({
+    return fr.JSONResponse({
         'challenge': str(base64.b64encode(challenge), 'ascii'),
         'allowCredentials': [v.id for v in registered_keys],
     })
@@ -95,34 +78,31 @@ async def post_prelogin():
 async def post_api_register_key(request: Request):
     global challenge
     if challenge is None:
-        raise HTTPException(403, 'Forbidden - Challenge not set')
+        raise HTTPException(422, 'Unprocessable Content - Challenge not set')
     challenge_local = challenge
     challenge = None
     
-    body = json.loads(await request.body())
-    print(body)
-    print()
+    try:
+        body = json.loads(await request.body())
+    except json.decoder.JSONDecodeError:
+        raise HTTPException(400, 'Bad Request - Invalid JSON')
     
-    assert body['rpId'] in ['localhost', 'den-antares.com']
+    if body['rpId'] not in ['localhost', 'den-antares.com']:
+        raise HTTPException(403, 'Forbidden - This key is for '
+            f'"{body['rpId']}", not this site')
     
-    print('Attempting verify_registration_response()')
-    verified_registration = verify_registration_response(
-        credential=body,
-        expected_challenge=challenge_local,
-        expected_rp_id=body['rpId'],
-        expected_origin=body['origin'],
-        require_user_verification=False,
-    )
-    print(verified_registration)
-    print()
+    try:
+        verified_registration = webauthn.verify_registration_response(
+            credential=body,
+            expected_challenge=challenge_local,
+            expected_rp_id=body['rpId'],
+            expected_origin=body['origin'],
+            require_user_verification=False,
+        )
+    except webauthn.helpers.exceptions.InvalidRegistrationResponse as e:
+        raise HTTPException(401, f'Unauthorized - {e}')
     
-    print('Trying to find strings that need persisting:')
-    print('id:', base64.b64encode(verified_registration.credential_id))
-    print('public key:',
-        base64.b64encode(verified_registration.credential_public_key))
-    print()
-    
-    return JSONResponse({
+    return fr.JSONResponse({
         'id': str(
             base64.b64encode(verified_registration.credential_id),
             'ascii'),
@@ -135,60 +115,63 @@ async def post_api_register_key(request: Request):
 async def post_api_login(request: Request):
     global challenge
     if challenge is None:
-        raise HTTPException(403, 'Forbidden - Challenge not set')
+        raise HTTPException(422, 'Unprocessable Content - Challenge not set')
     challenge_local = challenge
     challenge = None
     
-    body = json.loads(await request.body())
-    print(body)
-    print()
+    try:
+        body = json.loads(await request.body())
+    except json.decoder.JSONDecodeError:
+        raise HTTPException(400, 'Bad Request - Invalid JSON')
     
-    assert body['rpId'] in ['localhost', 'den-antares.com']
+    if body['rpId'] not in ['localhost', 'den-antares.com']:
+        raise HTTPException(403, 'Forbidden - This key is for '
+            f'`{body['rpId']}`, not this site')
     
     for key in registered_keys:
         if key.id == body['rawId']:
             public_key = base64.b64decode(key.public_key)
             break
     else:
-        raise HTTPException(403, 'Key ID not found in registered keys')
+        raise HTTPException(403, 'Forbidden - Key ID not found in registered '
+            'keys')
     
-    verified_response = verify_authentication_response(
-        credential=body,
-        expected_challenge=challenge_local,
-        expected_rp_id=body['rpId'],
-        expected_origin=body['origin'],
-        credential_public_key=public_key,
-        credential_current_sign_count=0,
-        require_user_verification=False,
-    )
-    
-    print('Finally got a verified response:')
-    print(verified_response)
-    print()
+    try:
+        verified_response = webauthn.verify_authentication_response(
+            credential=body,
+            expected_challenge=challenge_local,
+            expected_rp_id=body['rpId'],
+            expected_origin=body['origin'],
+            credential_public_key=public_key,
+            # Sign count is required, but doesn't seem to do anything
+            credential_current_sign_count=0,
+            require_user_verification=False,
+        )
+    except webauthn.helpers.exceptions.InvalidAuthenticationResponse as e:
+        raise HTTPException(401, f'Unauthorized - {e}')
     
     token = str(base64.b64encode(os.urandom(32)), 'ascii')
     tokens.append(token)
-    res = PlainTextResponse(token)
+    res = fr.PlainTextResponse(token)
     res.set_cookie(key='token', value=token)
     return res
 
+def check_token(token: str | None):
+    if not token:
+        raise HTTPException(401, 'Unauthorized - login at https:/login.html')
+    
+    if token not in tokens:
+        raise HTTPException(403, 'Forbidden')
+
 @app.post('/api/logout')
 async def post_api_logout(token: str | None = Cookie(default=None)):
-    if token not in tokens:
-        raise HTTPException(401, 'Unauthorized - login at https:/login.html')
-    
+    check_token(token)
     tokens.remove(token)
-    
-    return PlainTextResponse('Success!')
 
 @app.post('/api/logout-all')
-async def post_api_logout(token: str | None = Cookie(default=None)):
-    if token not in tokens:
-        raise HTTPException(401, 'Unauthorized - login at https:/login.html')
-    
+async def post_api_logout_all(token: str | None = Cookie(default=None)):
+    check_token(token)
     tokens.clear()
-    
-    return PlainTextResponse('Success!')
 
 @app.get('/files/')
 @app.get('/files/{file_path:path}/')
@@ -198,19 +181,21 @@ token: str | None = Cookie(default=None)):
     
     if os.path.commonpath([machine_path, '/www/restricted']) == \
     '/www/restricted':
-        if token not in tokens:
-            raise HTTPException(401, 'Unauthorized - login at '
-                'https:/static/login.html')
+        check_token(token)
     
     return helpers.StaticFilesWithDir.get_dir_list(None, machine_path, {
         'path': request.url.path,
     })
 
+#######################
+# Static File Folders #
+#######################
+
 # Keep .mount() calls at end, so that endpoints inside /files are still served
 app.mount(
     name='static',
     path='/static',
-    app=StaticFiles(directory=pathlib.Path(__file__).parent / 'static'),
+    app=StaticFiles(directory=__dir__ / 'static'),
 )
 app.mount(
     name='files',
