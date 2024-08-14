@@ -1,10 +1,9 @@
-import collections, secrets, json, pathlib, os, base64, dataclasses
+import collections, secrets, json, pathlib, os, base64, dataclasses, http
 import setproctitle
 
+import fastapi, fastapi.staticfiles, starlette, webauthn
 from fastapi import FastAPI, HTTPException, Request, Cookie
 import fastapi.responses as fr
-from fastapi.staticfiles import StaticFiles
-import webauthn
 
 import helpers
 
@@ -54,6 +53,43 @@ registered_keys = [
     ),
 ]
 
+error_template = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+
+<title>Tir na Nog</title>
+</head>
+
+<body>
+<h1>{status_code} {status}</h1>
+{message}
+</body>
+</html>'''
+
+# FastAPI docs advise intercepting the Starlette HTTP exception, not the FastAPI
+# one
+@app.exception_handler(starlette.exceptions.HTTPException)
+async def http_exception_handler(request: Request,
+err: starlette.exceptions.HTTPException):
+    if request.headers.get('Sec-Fetch-Mode') == 'navigate':
+        message = err.detail
+        
+        if err.status_code in [401, 403]:
+            message += '<br /><a href="/static/login.html">Login here</a>'
+        
+        html = error_template.format(
+            status_code=err.status_code,
+            status=http.client.responses[err.status_code],
+            message=message,
+        )
+        
+        return fr.HTMLResponse(status_code=err.status_code, content=html)
+    
+    return await fastapi.exception_handlers.http_exception_handler(request, err)
+
 #############
 # Endpoints #
 #############
@@ -62,6 +98,10 @@ registered_keys = [
 async def get_():
     with open(__dir__ / 'static' / 'index.html') as f:
         return fr.HTMLResponse(f.read())
+
+@app.get('/favicon.ico')
+async def get_():
+    return fr.RedirectResponse('/static/favicon.ico')
 
 @app.post('/api/challenge')
 async def post_prelogin():
@@ -195,7 +235,7 @@ token: str | None = Cookie(default=None)):
 app.mount(
     name='static',
     path='/static',
-    app=StaticFiles(directory=__dir__ / 'static'),
+    app=fastapi.staticfiles.StaticFiles(directory=__dir__ / 'static'),
 )
 app.mount(
     name='files',
