@@ -27,6 +27,12 @@ class RegisteredKey:
     public_key: str
 
 registered_keys = [
+    RegisteredKey( # localhost - Yubkey 5 NFC
+        id='iEz0VA4zLJeDDQqmDsFxwyPsni1lCVAAevIEMKrruFfoVPIf1FYZJ8usYDTkjqH/tB1'
+            'CpVQg71LrTChfpoAU9w==',
+        public_key='pQECAyYgASFYIMX4QOP5gvEQH2nuQbjQ/1OoeiZ9mTWzN8LvLaSKVFjMIlg'
+            'gLot+HtQvjuTuUJGOQ+3o34QzlFvP8uu7EV66bTzIFs0=',
+    ),
     RegisteredKey( # localhost - Yubikey 5 NFC (Ars)
         id='am0MIQbgeDpimmSs5vTvfv30An1ELKiWtUEDDe9wXLdwiWElfTXd6cC3iiZVIsbQPwC'
             'pD7PzsOUyBx7TKfmBnQ==',
@@ -38,6 +44,12 @@ registered_keys = [
             'fEkiAn0ZNACQK3/zj3Q==',
         public_key='pQECAyYgASFYIOZIpVC7JbRnKeFSvqeiP8WtymmjyFsCwY8A3tmbkzgEIlg'
             'gNOhEmwyz7HwSpK84kyvf5BBoNKj42KZuT6BAugPPiug=',
+    ),
+    RegisteredKey( # den-antares.com
+        id='pDvWeA8ZfgXsqoNZeo12WScVhQNPo9gioAScFyXlfdOKqlJCHwSiMXoTtcsTv8d2nS6'
+            'AYp4yJUXkVRDaRPwa2A==',
+        public_key='pQECAyYgASFYIAKteyStrylQok14QnfRPVNaBtrMX88dM1uSTFC5FOq4Ilg'
+            'gkWZ/u3guarx7+5rSgXVzBp3tq7RoFe4FwpAOqWMSprM=',
     ),
     RegisteredKey( # den-antares.com - Yubikey 5 NFC (Ars)
         id='6Vbj8ydd2++owAKKJht0DVg/cTMoeitoIWb6jyJU2843y5fdfoQB0BrHbXhF2leaE1w'
