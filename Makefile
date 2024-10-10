@@ -1,8 +1,11 @@
 PY=python3.12
 
+# Do not attempt to run servers on ports below 1024. Even if permissions are
+# granted by setcap, they can randomly disappear later. Setcap permissions
+# should not be relied on in production
 run:
 	venv-$(PY)/bin/python -m uvicorn app-fastapi:app \
-		--host 0.0.0.0 --port 443 \
+		--host 0.0.0.0 --port 8443 \
 		--ssl-keyfile privkey.pem \
 		--ssl-certfile fullchain.pem
 
@@ -22,9 +25,6 @@ install:
 	$(PY) -m venv venv-$(PY)
 	venv-$(PY)/bin/python -m pip install --upgrade pip
 	venv-$(PY)/bin/python -m pip install -r requirements.txt
-	
-	sudo setcap CAP_NET_BIND_SERVICE=+eip \
-		$$(readlink -f venv-$(PY)/bin/python)
 	
 	sudo cp -f tir-na-nog.service /etc/systemd/system
 	sudo systemctl daemon-reload
