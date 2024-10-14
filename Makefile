@@ -33,6 +33,7 @@ install:
 	@printf 'Run make certify as well (don$'t know how long until expiry)'
 	@printf ' !!!!\033[0m\n\n'
 
+# Can also be used for renewing an existing certificate
 certify:
 	read -p 'Make sure plain HTTP server is running in /www and press enter...' -n1 -s
 	
@@ -43,8 +44,8 @@ certify:
 	# !!!! Verify certificate and key haven't moved !!!!
 	@printf '\033[0m\n'
 	
-	sudo cp /etc/letsencrypt/live/tir-na-nog.den-antares.com/privkey.pem .
-	sudo cp /etc/letsencrypt/live/tir-na-nog.den-antares.com/fullchain.pem .
+	sudo cp -f /etc/letsencrypt/live/tir-na-nog.den-antares.com/privkey.pem .
+	sudo cp -f /etc/letsencrypt/live/tir-na-nog.den-antares.com/fullchain.pem .
 	sudo chown 1000 *.pem
 	sudo chgrp 1000 *.pem
 	sudo chmod 755 *.pem
