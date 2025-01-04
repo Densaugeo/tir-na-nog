@@ -252,5 +252,6 @@ app.mount(
 app.mount(
     name='files',
     path='/files',
-    app=helpers.StaticFilesWithDir(directory='/www', html=True),
+    app=helpers.StaticFilesWithDir(directory='/www', html=True,
+        follow_symlink=True),
 )
