@@ -35,7 +35,7 @@ install:
 
 # Can also be used for renewing an existing certificate
 certify:
-	read -p 'Make sure plain HTTP server is running in /www and press enter...' -n1 -s
+	read -p 'Make sure plain HTTP server is running on port 8080 in /www and press enter...' -n1 -s
 	
 	sudo certbot certonly --email 'nathan.yinger@gmail.com' --agree-tos \
 	--non-interactive -d 'tir-na-nog.den-antares.com' --webroot -w /www
