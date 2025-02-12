@@ -5,13 +5,13 @@ PY=python3.12
 # should not be relied on in production
 run:
 	venv-$(PY)/bin/python -m uvicorn app-fastapi:app \
-		--host 0.0.0.0 --port 8443 \
+		--host 0.0.0.0 --port 8443 --use-colors \
 		--ssl-keyfile privkey.pem \
 		--ssl-certfile fullchain.pem
 
 dev: test.pem
 	venv-$(PY)/bin/python -m uvicorn app-fastapi:app \
-		--host 0.0.0.0 --port 8443 --reload \
+		--host 0.0.0.0 --port 8443 --use-colors --reload \
 		--ssl-keyfile test.pem \
 		--ssl-certfile test.pem
 
