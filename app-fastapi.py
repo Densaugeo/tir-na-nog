@@ -1,11 +1,10 @@
 import collections, secrets, json, pathlib, os, base64, dataclasses, http
-import setproctitle
+import setproctitle, re, logging
+from typing import List
 
 import fastapi, fastapi.staticfiles, starlette, webauthn
-from fastapi import FastAPI, HTTPException, Request, Cookie
+from fastapi import FastAPI, HTTPException, Request, Cookie, Header
 import fastapi.responses as fr
-
-import helpers
 
 #################
 # General Setup #
@@ -14,6 +13,8 @@ import helpers
 setproctitle.setproctitle('tir-na-nog')
 
 __dir__ = pathlib.Path(__file__).parent
+
+logger = logging.getLogger('uvicorn')
 
 app = FastAPI()
 
@@ -105,15 +106,6 @@ err: starlette.exceptions.HTTPException):
 #############
 # Endpoints #
 #############
-
-@app.get('/')
-async def get_():
-    with open(__dir__ / 'static' / 'index.html') as f:
-        return fr.HTMLResponse(f.read())
-
-@app.get('/favicon.ico')
-async def get_():
-    return fr.RedirectResponse('/static/favicon.ico')
 
 @app.post('/api/challenge')
 async def post_prelogin():
@@ -225,33 +217,63 @@ async def post_api_logout_all(token: str | None = Cookie(default=None)):
     check_token(token)
     tokens.clear()
 
-@app.get('/files/')
-@app.get('/files/{file_path:path}/')
-async def get_files(request: Request, file_path: str | None = None,
-token: str | None = Cookie(default=None)):
-    machine_path = (pathlib.Path('/www') / (file_path or '')).resolve()
-    
-    if os.path.commonpath([machine_path, '/www/restricted']) == \
-    '/www/restricted':
-        check_token(token)
-    
-    return helpers.StaticFilesWithDir.get_dir_list(None, machine_path, {
-        'path': request.url.path,
-    })
+@app.get('/verify')
+async def get_auth_check(request: Request, x_forwarded_method: str = Header(),
+x_forwarded_uri: str = Header(), token: str | None = Cookie(default=None)):
+    logger.info(
+        f'{request.client.host}:{request.client.port} - '
+        f'{style([YELLOW])}Verifying '
+        f'{style([BOLD, BLUE])}{x_forwarded_method} '
+        f'{style([RESET, VIOLET])}{x_forwarded_uri} '
+        f'{style([RESET])}...'
+    )
+    check_token(token)
 
-#######################
-# Static File Folders #
-#######################
+################
+# Style Helper #
+################
 
-# Keep .mount() calls at end, so that endpoints inside /files are still served
-app.mount(
-    name='static',
-    path='/static',
-    app=fastapi.staticfiles.StaticFiles(directory=__dir__ / 'static'),
-)
-app.mount(
-    name='files',
-    path='/files',
-    app=helpers.StaticFilesWithDir(directory='/www', html=True,
-        follow_symlink=True),
-)
+# Copied from ffvrc. ffvrc's copy should be considered authoritative
+def style(styles: List[str | int], string: object = '',
+width: int | None = None) -> str:
+    string = str(string)
+    
+    if width is not None:
+        assert width > 0
+        
+        if len(string) <= width: string = f'{string:{width}}'
+        else: string = string[:max(width - 3, 0)] + min(width, 3)*'.'
+    
+    ansi_codes = ''
+    
+    if not isinstance(styles, list):
+        styles = [styles]
+    
+    for style in styles:
+        match style:
+            case int():
+                ansi_codes += f'\033[{style}m'
+            case str() if re.fullmatch('#[0-9a-fA-F]{3}', style):
+                r, g, b = (int(style[i], 16)*0xff//0xf for i in [1, 2, 3])
+                ansi_codes += f'\033[38;2;{r};{g};{b}m'
+            case str() if re.fullmatch('#[0-9a-fA-F]{6}', style):
+                r, g, b = (int(style[i:i+2], 16) for i in [1, 3, 5])
+                ansi_codes += f'\033[38;2;{r};{g};{b}m'
+            case _:
+                raise ValueError(f'Unknown style: {style}')
+    
+    reset = '\033[0m' if styles and string else ''
+    
+    return ansi_codes + string + reset
+
+RESET = 0
+BOLD = 1
+GRAY = '#ccc'
+MAGENTA = '#f0f'
+VIOLET = '#c6f'
+BLUE = '#4ad'
+AQUA = '#1aba97'
+GREEN = '#4d4'
+YELLOW = '#fe0'
+ORANGE = '#ecb64a'
+RED = '#f00'
