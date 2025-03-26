@@ -19,11 +19,10 @@ User=caddy
 Group=caddy
 # $HOSTNAME isn't available inside Caddyfile without this trick
 Environment="HOSTNAME=%H"
-Environment="TIR_NA_NOG_HOSTNAME_PLUS_COMMA=tir-na-nog.den-antares.com,"
 Environment="TIR_NA_NOG_ENV=prod"
-ExecStartPre=/usr/bin/caddy validate --config /www/tir-na-nog/Caddyfile
-ExecStart=/usr/bin/caddy run --environ --config /www/tir-na-nog/Caddyfile
-ExecReload=/usr/bin/caddy reload --config /www/tir-na-nog/Caddyfile
+ExecStartPre=/usr/bin/caddy validate --config /www/tir-na-nog/Caddyfile-prod
+ExecStart=/usr/bin/caddy run --environ --config /www/tir-na-nog/Caddyfile-prod
+ExecReload=/usr/bin/caddy reload --config /www/tir-na-nog/Caddyfile-prod
 TimeoutStopSec=5s
 LimitNOFILE=1048576
 PrivateTmp=true

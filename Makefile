@@ -19,6 +19,7 @@ install: test-cert.pem
 	# Written for Fedora
 	sudo dnf install -y caddy
 	sudo setsebool -P nis_enabled 1
+	sudo setsebool -P httpd_use_fusefs 1
 	
 	sudo mkdir -p /www
 	sudo chmod 755 /www
@@ -56,4 +57,4 @@ test-cert.pem:
 		-newkey rsa:3072 -nodes -sha256 -subj "/CN=$$HOSTNAME" \
 		-days 10000
 	
-	chown caddy:caddy test-cert.pem test-key.pem
+	sudo chown caddy:caddy test-cert.pem test-key.pem

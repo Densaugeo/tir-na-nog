@@ -18,7 +18,6 @@
 	ocsp_stapling off
 }
 
-{$TIR_NA_NOG_HOSTNAME_PLUS_COMMA}
 https://{$HOSTNAME},
 https://localhost {
 	tls /www/tir-na-nog/test-cert.pem /www/tir-na-nog/test-key.pem
@@ -35,5 +34,6 @@ https://localhost {
 
 	log {
 		output file /www/logs/access-{$TIR_NA_NOG_ENV:test}.log
+		format json
 	}
 }
