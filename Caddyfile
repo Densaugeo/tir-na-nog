@@ -1,9 +1,15 @@
 {
 	# Not necessary, I just don't like the admin API
 	admin off
-	
+
+	# Prevent Caddy from binding to ports below 1000. Ports below 1000 require
+	# setcap permissions, which, even if set up correctly, can unset themselves
 	http_port 8080
-	
+	https_port 8443
+
+	# Required to run caddy without root/wheel
+	skip_install_trust
+
 	# Required for Quest compatibility. If OCSP stapling is left on, serving videos to
 	# Quest may work for up to one week, but will then fail due to expiration issues.
 	# The OCSP bug can be confirmed by leaving OCSP stapling on, waiting 8 days, and
@@ -12,9 +18,13 @@
 	ocsp_stapling off
 }
 
-localhost:8443 {
+{$TIR_NA_NOG_HOSTNAME_PLUS_COMMA}
+https://{$HOSTNAME},
+https://localhost {
+	tls /www/tir-na-nog/test-cert.pem /www/tir-na-nog/test-key.pem
+
 	file_server browse {
-		root /www-tir-na-nog/root
+		root /www/tir-na-nog/root
 	}
 
 	reverse_proxy /api/* localhost:9000
@@ -24,6 +34,6 @@ localhost:8443 {
 	}
 
 	log {
-		output file /www-tir-na-nog/access.log
+		output file /www/logs/access-{$TIR_NA_NOG_ENV:test}.log
 	}
 }

@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 User=den-antares
-WorkingDirectory=/home/den-antares/projects/tir-na-nog
+WorkingDirectory=/www/tir-na-nog
 # LimitNOFILE copied from guide, not sure if important
 LimitNOFILE=4096
 ExecStart=make run
