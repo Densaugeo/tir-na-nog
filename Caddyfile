@@ -28,7 +28,11 @@ https://localhost {
 
 	reverse_proxy /api/* localhost:9000
 
-	forward_auth /files/restricted/* localhost:9000 {
+	forward_auth /files/restricted/ localhost:9000 {
+		uri /verify
+	}
+
+	forward_auth /files/restricted/*/ localhost:9000 {
 		uri /verify
 	}
 

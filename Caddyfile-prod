@@ -7,9 +7,14 @@ tir-na-nog.den-antares.com {
 
 	reverse_proxy /api/* localhost:9000
 
-	forward_auth /files/restricted/* localhost:9000 {
+	forward_auth /files/restricted/ localhost:9000 {
 		uri /verify
 	}
+
+	forward_auth /files/restricted/*/ localhost:9000 {
+		uri /verify
+	}
+
 
 	log {
 		output file /www/logs/access-{$TIR_NA_NOG_ENV:test}.log
