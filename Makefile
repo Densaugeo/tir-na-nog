@@ -20,6 +20,9 @@ install: test-cert.pem
 	sudo dnf install -y caddy
 	sudo setsebool -P nis_enabled 1
 	sudo setsebool -P httpd_use_fusefs 1
+	# Allows Caddy to access files labeled user_home_t. This is essential
+	# because this label is often applied to new files
+	setsebool -P httpd_read_user_content 1
 	
 	sudo mkdir -p /www
 	sudo chmod 755 /www
@@ -40,7 +43,7 @@ install: test-cert.pem
 	
 	sudo cp -f *.service /etc/systemd/system
 	sudo systemctl daemon-reload
-	
+
 ifneq "$(shell pwd -P)" "/www/tir-na-nog"
 	cd .. && sudo mv tir-na-nog /www/tir-na-nog
 	ln -s /www/tir-na-nog ..
