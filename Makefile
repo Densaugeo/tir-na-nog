@@ -9,7 +9,7 @@ run:
 
 dev:
 	@printf '\n\033[38;2;255;224;0m!!!! '
-	@printf 'Run `caddy run` from this folder in another terminal'
+	@printf 'Run `sudo -u caddy caddy run` from this folder in another terminal'
 	@printf ' !!!!\033[0m\n\n'
 	
 	venv-$(PY)/bin/python -m uvicorn app-fastapi:app \
@@ -22,7 +22,7 @@ install: test-cert.pem
 	sudo setsebool -P httpd_use_fusefs 1
 	# Allows Caddy to access files labeled user_home_t. This is essential
 	# because this label is often applied to new files
-	setsebool -P httpd_read_user_content 1
+	sudo setsebool -P httpd_read_user_content 1
 	
 	sudo mkdir -p /www
 	sudo chmod 755 /www
