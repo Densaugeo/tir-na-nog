@@ -2,11 +2,14 @@
 PY=python3.12
 USER_PREFIX=tir-na-nog
 
+ifeq ($(HOSTNAME), morpheus)
+FQDN_ARG = --fqdn tir-na-nog.den-antares.com
+endif
+
 RESET=\x1b[0m
 BOLD=\x1b[1m
 ORANGE=\x1b[38;2;246;116;0m
 WHITE=\x1b[38;2;255;255;255m
-
 
 install:
 	sudo dnf install apptainer tmux
@@ -33,7 +36,7 @@ clean:
 
 commission: /www
 	sudo python apptainers/cluster-runner.py daemonize /www \
-		$(USER_PREFIX) 6080 6443
+		$(USER_PREFIX) 6080 6443 $(FQDN_ARG)
 
 /www:
 	python apptainers/cluster-runner.py deploy $@ $(USER_PREFIX) \

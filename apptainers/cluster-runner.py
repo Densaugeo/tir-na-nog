@@ -139,6 +139,21 @@ def install(user_prefix: str):
         verify_file(folder / 'Definitionfile', 'Apptainer definition')
     
     print(f'{ITALIC}{CYAN}Preparing Linux users...{RESET}')
+    
+    try:
+        grp.getgrnam('www').gr_gid
+        print(f'Group {BOLD}{VIOLET}www{RESET} already present')
+        added_group = False
+    except KeyError:
+        print(f'Adding user/group {BOLD}{VIOLET}www{RESET}')
+        subprocess.run(f'sudo useradd --system www',
+            shell=True, check=True)
+        added_group = True
+    
+    print(f'Adding current user to {BOLD}{VIOLET}www{RESET} group')
+    subprocess.run(f'sudo usermod --append --groups www $USER',
+        shell=True, check=True)
+    
     for folder in app_folders:
         app_name = folder.name
         app_user = f'{user_prefix}-{app_name}'
@@ -159,10 +174,6 @@ def install(user_prefix: str):
             input=f'%www ALL = ({app_user}) NOPASSWD:ALL\n', text=True,
             shell=True, check=True)
     
-    print(f'Adding current user to {BOLD}{VIOLET}www{RESET} group')
-    subprocess.run(f'sudo usermod --append --groups www $USER',
-        shell=True, check=True)
-    
     print()
     
     for folder in app_folders:
@@ -173,6 +184,12 @@ def install(user_prefix: str):
             cwd=folder, shell=True, check=True)
         
         print()
+    
+    if added_group:
+        print(f'{BOLD}{WARNING_ORANGE}Notice: {WHITE}Must re-login to update '
+            f'permissions for {VIOLET}www{WHITE} group:{RESET}\n'
+            f'- Run {AQUA}su $USER{RESET} to update this shell\n'
+            f'- Or reboot\n')
 
 def uninstall(user_prefix: str):
     print()
@@ -307,7 +324,7 @@ WantedBy=multi-user.target
             exec_start_pre = (f'python {__file__} caddygen . {http_port} '
                 f'{https_port}')
             if fqdn:
-                exec_start_pre + f' --fqdn {fqdn}'
+                exec_start_pre += f' --fqdn {fqdn}'
             exec_start = ('apptainer run --containall '
                 '--bind caddy/ro:/ro:ro --bind caddy/rw:/rw:rw '
                 '--bind sockets:/sockets --bind webroot:/webroot:ro '
@@ -358,7 +375,7 @@ WantedBy={user_prefix}.target
     
     print(f'\nSystemD services installed and grouped under '
         f'{BOLD}{AQUA}{user_prefix}.target{RESET} .'
-        f' Run {AQUA}systemctl start {BOLD}{user_prefix}.target{RESET} to '
+        f' Run {AQUA}sudo systemctl start {BOLD}{user_prefix}.target{RESET} to '
         f'start.\n')
 
 def clear_daemons(user_prefix: str):
