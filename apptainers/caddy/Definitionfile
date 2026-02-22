@@ -1,0 +1,17 @@
+Bootstrap: docker
+From: fedora:42
+
+%post
+    dnf update -y
+    
+    dnf install -y caddy openssl
+    openssl req -x509 -out /test-cert.pem -keyout /test-key.pem \
+        -newkey rsa:3072 -nodes -sha256 -subj "/CN=$HOSTNAME" -days 10000
+    
+    curl -L -o /usr/bin/calopr \
+        https://github.com/Densaugeo/calopr/releases/latest/download/calopr-x64-linux
+    chmod 755 /usr/bin/calopr
+
+%runscript
+    cd /rw
+    exec caddy run $*

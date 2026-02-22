@@ -1,0 +1,17 @@
+Bootstrap: docker
+From: fedora:42
+
+%files
+    requirements.txt /requirements.txt
+
+%post
+    dnf update -y
+    dnf install -y python3.14
+    ln -s python3.14 /usr/bin/python
+    python -m ensurepip
+    python -m pip install -r /requirements.txt
+
+%runscript
+    cd /ro
+    exec python -m uvicorn app-fastapi:app --use-colors --uds /sockets/socket \
+        --forwarded-allow-ips '*' $([ $HOT_RELOAD ] && echo --reload) $*

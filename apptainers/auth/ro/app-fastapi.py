@@ -218,10 +218,28 @@ async def post_api_logout_all(token: str | None = Cookie(default=None)):
     tokens.clear()
 
 @app.get('/verify')
-async def get_auth_check(request: Request, x_forwarded_method: str = Header(),
-x_forwarded_uri: str = Header(), token: str | None = Cookie(default=None)):
+async def get_auth_check(request: Request,
+    # These headers are just for logging, so fallback placeholders are fine
+    x_forwarded_for   : str = Header(default='?.?.?.?'),
+    x_forwarded_port  : str = Header(default='???'    ),
+    x_forwarded_method: str = Header(default='???'    ),
+    x_forwarded_uri   : str = Header(default='/???'   ),
+    token: str | None = Cookie(default=None),
+):
+    # request.client may not exist, if FastAPI is running behind a proxy and
+    # does not receive X-Forwarded-* headers
+    host = request.client.host if request.client else None
+    port = request.client.port if request.client else None
+    
+    # While request.client.host is automatically popuplated from X-Forwarded-For
+    # if available, request.client.port is not automatically filled.
+    # Additionally, I use the header arguments to this function to supply
+    # default values
+    host = host or x_forwarded_for
+    port = port or x_forwarded_port
+    
     logger.info(
-        f'{request.client.host}:{request.client.port} - '
+        f'{host}:{port} - '
         f'{style([YELLOW])}Verifying '
         f'{style([BOLD, BLUE])}{x_forwarded_method} '
         f'{style([RESET, VIOLET])}{x_forwarded_uri} '
