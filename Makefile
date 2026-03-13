@@ -61,6 +61,45 @@ uninstall:
 
 
 
+# Two scratches for trying out new CLI passkey tool (currently in agentry
+# project)
+scratch: passkey.pem
+	curl -X POST -ksS --fail-with-body https://localhost:8443/api/challenge \
+		--json '{"username": "den-antares"}' \
+		> passkey-challenge.json
+	python ../agentry/webauthn-tool.py register \
+		--challenge "$$(jq '.challenge' passkey-challenge.json)" \
+		--private-key passkey.pem \
+		--origin localhost --user-id den-antares \
+		> passkey-registration.json
+	jq '. += { rpId: "localhost", origin: "localhost", username: "den-antares" }' \
+		passkey-registration.json > passkey-registration-full.json
+	curl -X POST -ksS --fail-with-body \
+		https://localhost:8443/api/register-key \
+		--json @passkey-registration-full.json
+	@printf '\n'
+
+scratch-2: passkey.pem
+	curl -X POST -ksS --fail-with-body https://localhost:8443/api/challenge \
+		--json '{"username": "den-antares"}' \
+		> passkey-challenge.json
+	python ../agentry/webauthn-tool.py authenticate \
+		--challenge "$$(jq '.challenge' passkey-challenge.json)" \
+		--private-key passkey.pem \
+		--origin localhost --credential-id "Nn20CDS45AgdiAN0b_v7SQ" \
+		> passkey-authentication.json
+	jq '. += { rpId: "localhost", origin: "localhost", username: "den-antares" }' \
+		passkey-authentication.json > passkey-authentication-full.json
+	curl -X POST -ksS --fail-with-body \
+		https://localhost:8443/api/login \
+		--json @passkey-authentication-full.json
+	@printf '\n'
+
+passkey.pem:
+	openssl ecparam -genkey -name prime256v1 -out $@
+
+
+
 # Is this SELinux stuff needed? Apptainer seems to avoid most SELinux issues,
 # but I won't know for sure until I try installing on a fresh OS
 selinux-configured.txt:
