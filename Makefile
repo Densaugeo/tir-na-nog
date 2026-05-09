@@ -12,7 +12,9 @@ ORANGE=\x1b[38;2;246;116;0m
 WHITE=\x1b[38;2;255;255;255m
 
 install:
-	sudo dnf install apptainer tmux
+	# Check apptainer and tmux are installed
+	apptainer version
+	tmux -V
 	python apptainers/cluster-runner.py install $(USER_PREFIX)
 
 dev: www-dev
@@ -34,27 +36,27 @@ www-test:
 clean:
 	rm -rf www-dev www-test
 
-commission: /www
-	sudo python apptainers/cluster-runner.py daemonize /www \
+commission: /var/www
+	sudo python apptainers/cluster-runner.py daemonize /var/www \
 		$(USER_PREFIX) 6080 6443 $(FQDN_ARG)
 
-/www:
+/var/www:
 	python apptainers/cluster-runner.py deploy $@ $(USER_PREFIX) \
 		root
 
 monitor:
-	python apptainers/cluster-runner.py monitor /www $(USER_PREFIX) \
+	python apptainers/cluster-runner.py monitor /var/www $(USER_PREFIX) \
 		tir-na-nog-prod
 
 decommission:
 	@printf '\n$(BOLD)$(ORANGE)Warning: $(WHITE)All files under '
-	@printf '$(ORANGE)/www $(WHITE)will be deleted!$(RESET)\n\n'
+	@printf '$(ORANGE)/var/www $(WHITE)will be deleted!$(RESET)\n\n'
 	
 	@printf 'Press enter to continue, or exit with Ctrl+C\n'
 	@read
 	
 	sudo python apptainers/cluster-runner.py clear-daemons $(USER_PREFIX)
-	sudo rm -rf /www
+	sudo rm -rf /var/www
 
 uninstall:
 	python apptainers/cluster-runner.py uninstall $(USER_PREFIX)
